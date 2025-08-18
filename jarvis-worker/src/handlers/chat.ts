@@ -56,11 +56,22 @@ try {
     prompt: contextualPrompt
   });
   console.log('✅ AI call success');
-  jarvisResponse = aiResponse.response || aiResponse;
+  console.log('AI response structure:', Object.keys(aiResponse));
+  console.log('AI response.response:', aiResponse.response);
+  console.log('AI response type:', typeof aiResponse);
+  
+  // Fix: Assicuriamoci che sia sempre una stringa
+  jarvisResponse = String(aiResponse.response || aiResponse.text || aiResponse || "I apologize, I couldn't generate a response.");
+  console.log('Final jarvisResponse type:', typeof jarvisResponse);
+  
 } catch (error) {
   console.error('❌ AI call failed:', error);
-  throw error;
+  return Response.json({
+    error: "JARVIS is temporarily unavailable",
+    details: "AI service error"
+  }, { status: 500 });
 }
+
 
 console.log('6. Saving conversation...');
     const currentMessageCount = await saveConversation(env.DB, message, jarvisResponse,finalSessionId);
