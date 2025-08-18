@@ -25,17 +25,30 @@ export async function saveConversation(
   jarvisResponse: string, 
   sessionId: string
 ): Promise<number> {
-  // Salva la conversazione
-  await db.prepare(`
-    INSERT INTO conversations (user_input, jarvis_response, session_id)
-    VALUES (?, ?, ?)
-  `).bind(userInput, jarvisResponse, sessionId).run();
+      console.log('💾 Saving conversation...');
+  console.log('userInput type:', typeof userInput, 'length:', userInput?.length);
+  console.log('jarvisResponse type:', typeof jarvisResponse, 'length:', jarvisResponse?.length);
+  console.log('sessionId type:', typeof sessionId, 'value:', sessionId);
+    
+  try {
+    const result = await db.prepare(`
+      INSERT INTO conversations (user_input, jarvis_response, session_id)
+      VALUES (?, ?, ?)
+    `).bind(userInput, jarvisResponse, sessionId).run();
+    
+    console.log('✅ Insert success');
+
+
   
   // Aggiorna statistiche sessione
   await updateSessionActivity(db, sessionId);
   
   // Restituisci il numero di messaggi utente per questa sessione
   return await getUserMessageCount(db, sessionId);
+      } catch (error) {
+    console.error('❌ Insert failed:', error);
+    throw error;
+  }
 }
 
 export async function getConversationsBySession(
