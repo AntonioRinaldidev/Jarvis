@@ -41,13 +41,11 @@ export async function getImportantMemories(
     const safeMinImportance = Number(minImportance);
     
   try {
-    const result = await db.prepare(`
-      SELECT id, memory_type, content, importance_score, created_at
-      FROM memory_bank 
-      ORDER BY importance_score DESC, created_at DESC
-      LIMIT 10
-    `).all(); // ← Nessun .bind(), nessun WHERE
-    
+  const result = await db.prepare(`
+  SELECT * FROM memory_bank 
+  ORDER BY importance_score DESC
+  LIMIT 10
+`).all();
     return mapDbResults(result.results, toMemory);
   } catch (error) {
     console.error('❌ Query failed:', error);
