@@ -35,7 +35,9 @@ export async function getImportantMemories(
   db: D1Database, 
   minImportance = 3
 ): Promise<Memory[]> {
-  console.log('🔍 Getting important memories with minImportance:', minImportance);
+  console.log('🔍 Getting important memories');
+  console.log('db type:', typeof db);
+  console.log('minImportance type:', typeof minImportance, 'value:', minImportance);
   
   try {
     const result = await db.prepare(`
@@ -46,13 +48,13 @@ export async function getImportantMemories(
       LIMIT 10
     `).bind(minImportance).all();
     
-    console.log('✅ Query success, results:', result.results?.length || 0);
     return mapDbResults(result.results, toMemory);
   } catch (error) {
     console.error('❌ Query failed:', error);
     throw error;
   }
 }
+
 
 export async function getAllMemories(db:D1Database):Promise<Memory[]>{
     const result = await db.prepare(`
