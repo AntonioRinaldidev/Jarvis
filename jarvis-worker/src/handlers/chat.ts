@@ -60,9 +60,18 @@ try {
   console.log('AI response.response:', aiResponse.response);
   console.log('AI response type:', typeof aiResponse);
   
-  // Fix: Assicuriamoci che sia sempre una stringa
-  jarvisResponse = String(aiResponse.response || aiResponse.text || aiResponse || "I apologize, I couldn't generate a response.");
-  console.log('Final jarvisResponse type:', typeof jarvisResponse);
+if (typeof aiResponse === 'string') {
+  jarvisResponse = aiResponse;
+} else if (aiResponse && typeof aiResponse === 'object') {
+  jarvisResponse = aiResponse.response || 
+                   aiResponse.text || 
+                   aiResponse.result || 
+                   JSON.stringify(aiResponse);
+} else {
+  jarvisResponse = "I apologize, I couldn't generate a response.";
+}
+
+console.log('Final jarvisResponse:', jarvisResponse.substring(0, 100) + '...');
   
 } catch (error) {
   console.error('❌ AI call failed:', error);
