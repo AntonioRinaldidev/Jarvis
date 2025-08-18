@@ -3,8 +3,10 @@ import type { Conversation, Memory } from '../types/database.js';
 export function buildContextualPrompt(
  message: string, 
  history: Conversation[], 
+ isFirstMessage:boolean,
  summary?: string,
- memories?: Memory[]
+ memories?: Memory[],
+ 
 ): string {
  let prompt = `You are JARVIS, my advanced AI assistant. You are helpful, intelligent, sophisticated, and remember previous conversations.\n\n`;
  
@@ -40,6 +42,7 @@ export function buildContextualPrompt(
 export function buildChatMessages(
   message: string,
   history: Conversation[],
+  isFirstMessage:boolean,
   summary?: string,
   memories?: Memory[]
 ): Array<{ role: "system" | "user" | "assistant", content: string }> {
@@ -47,10 +50,17 @@ export function buildChatMessages(
   const messages: Array<{ role: "system" | "user" | "assistant", content: string }> = [];
   
  
-  let systemContent = "You are JARVIS, an advanced AI assistant. " +
-                      "Respond naturally and directly. " +
-                      "Never greet repeatedly or restate already known information.";
+let systemContent = `
+You are JARVIS, an advanced AI assistant. 
+Respond naturally and directly. 
+Focus only on the user’s questions and context.
+`;
   
+  if (isFirstMessage) {
+      systemContent += " Greet the user politely at the start of the session.";
+  } else {
+      systemContent += " Do NOT greet the user again.";
+  }
   if (summary) {
     systemContent += `\n\nContext (summary): ${summary}`;
   }

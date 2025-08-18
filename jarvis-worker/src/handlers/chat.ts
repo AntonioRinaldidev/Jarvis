@@ -36,16 +36,13 @@ export async function handleChat(request: Request, env: Env, ctx: ExecutionConte
   const [memories,summary,messages]= await Promise.all([
     getImportantMemories(env.DB, 5),
     getCurrentSummary(env.DB, finalSessionId),
-    getRecentHistory(env.DB, finalSessionId, 5)
+    getRecentHistory(env.DB, finalSessionId, 3)
   ]);
+  const isFirstMessage = messages.length === 0;
 
 
-  const contextualPrompt = buildContextualPrompt(message, messages, summary, memories);
-  const chatMessages = buildChatMessages(message, messages, summary, memories);
-
-  console.log('✅ Context built');
-
-  console.log('5. Calling AI...');
+  const contextualPrompt = buildContextualPrompt(message, messages, isFirstMessage, summary, memories);
+  const chatMessages = buildChatMessages(message, messages, isFirstMessage, summary, memories);
   let jarvisResponse: string;
 
   try {
