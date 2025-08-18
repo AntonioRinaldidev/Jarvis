@@ -32,16 +32,26 @@ memoryType:string):Promise<Memory[]>{
     return mapDbResults(result.results,toMemory)
 }
 export async function getImportantMemories(
-    db:D1Database,minImportance = 3
-):Promise<Memory[]>{
+  db: D1Database, 
+  minImportance = 3
+): Promise<Memory[]> {
+  console.log('🔍 Getting important memories with minImportance:', minImportance);
+  
+  try {
     const result = await db.prepare(`
-        SELECT id,memory_type,content,importance_score,created,at
-        FROM memory_bank
-        WHERE importance_score >=3
-        ORDER BY importance_score DESC, created_at DESC
-        LIMIT 10
-        `).all();
-        return mapDbResults(result.results,toMemory);
+      SELECT id, memory_type, content, importance_score, created_at
+      FROM memory_bank 
+      WHERE importance_score >= ?
+      ORDER BY importance_score DESC, created_at DESC
+      LIMIT 10
+    `).bind(minImportance).all();
+    
+    console.log('✅ Query success, results:', result.results?.length || 0);
+    return mapDbResults(result.results, toMemory);
+  } catch (error) {
+    console.error('❌ Query failed:', error);
+    throw error;
+  }
 }
 
 export async function getAllMemories(db:D1Database):Promise<Memory[]>{
