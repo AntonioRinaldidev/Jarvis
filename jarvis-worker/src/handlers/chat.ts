@@ -70,7 +70,13 @@ if (typeof aiResponse === 'string') {
 } else {
   jarvisResponse = "I apologize, I couldn't generate a response.";
 }
+console.log('🔍 Full AI Response Structure:');
+console.log('Type:', typeof aiResponse);
+console.log('Keys:', Object.keys(aiResponse));
+console.log('Full object:', JSON.stringify(aiResponse, null, 2));
 
+console.log('🔍 Prompt being sent:');
+console.log(contextualPrompt);
 console.log('Final jarvisResponse:', jarvisResponse.substring(0, 100) + '...');
   
 } catch (error) {
