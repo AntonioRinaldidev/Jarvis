@@ -39,14 +39,14 @@ export async function getImportantMemories(
   console.log('db type:', typeof db);
   console.log('minImportance type:', typeof minImportance, 'value:', minImportance);
     const safeMinImportance = Number(minImportance);
+    
   try {
     const result = await db.prepare(`
       SELECT id, memory_type, content, importance_score, created_at
       FROM memory_bank 
-      WHERE importance_score >= ?
       ORDER BY importance_score DESC, created_at DESC
       LIMIT 10
-    `).bind(safeMinImportance).all();
+    `).all(); // ← Nessun .bind(), nessun WHERE
     
     return mapDbResults(result.results, toMemory);
   } catch (error) {
