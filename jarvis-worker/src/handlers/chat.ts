@@ -32,8 +32,7 @@ export async function handleChat(request:Request,env:Env,ctx: ExecutionContext){
     const finalSessionId = session_id ||generateSessionId();
 
     const[memories,summary,messages] = await Promise.all([
-        //getImportantMemories(env.DB,5),
-        Promise.resolve([]),
+        getImportantMemories(env.DB,5),
         getCurrentSummary(env.DB,finalSessionId),
         getRecentHistory(env.DB,finalSessionId,5)
     ]);
