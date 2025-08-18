@@ -43,19 +43,26 @@ export async function handleChat(request:Request,env:Env,ctx: ExecutionContext){
     const messages = await getRecentHistory(env.DB, finalSessionId, 5);
     console.log('✅ Messages success');
     
-    const contextualPrompt =  buildContextualPrompt(message,messages,summary,memories)
-    let jarvisResponse;
-    try {
-        const aiResponse = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct',{
-            prompt:contextualPrompt
-        })
-        jarvisResponse = aiResponse.response ||aiResponse
-    } catch (error) {
-            return Response.json({
-      error: "JARVIS is temporarily unavailable",
-      details: "AI service error"
-    }, { status: 500 });
-    }
+console.log('4. Building prompt...');
+const contextualPrompt = buildContextualPrompt(message, messages, summary, memories);
+console.log('✅ Prompt built, length:', contextualPrompt.length);
+
+console.log('5. Calling AI...');
+console.log('env.AI type:', typeof env.AI);
+
+let jarvisResponse;
+try {
+  const aiResponse = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
+    prompt: contextualPrompt
+  });
+  console.log('✅ AI call success');
+  jarvisResponse = aiResponse.response || aiResponse;
+} catch (error) {
+  console.error('❌ AI call failed:', error);
+  throw error;
+}
+
+console.log('6. Saving conversation...');
     const currentMessageCount = await saveConversation(env.DB, message, jarvisResponse,finalSessionId);
     await updateMemoryIfImportant(env.DB, message);
   
