@@ -52,7 +52,7 @@ console.log('env.AI type:', typeof env.AI);
 
 let jarvisResponse;
 try {
-  const aiResponse = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
+  const aiResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
     prompt: contextualPrompt
   });
   console.log('✅ AI call success');
