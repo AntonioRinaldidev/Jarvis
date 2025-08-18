@@ -37,10 +37,10 @@ export async function getImportantMemories(
     const result = await db.prepare(`
         SELECT id,memory_type,content,importance_score,created,at
         FROM memory_bank
-        WHERE importance_score >=?
+        WHERE importance_score >=3
         ORDER BY importance_score DESC, created_at DESC
         LIMIT 10
-        `).bind(minImportance).all();
+        `).all();
         return mapDbResults(result.results,toMemory);
 }
 
