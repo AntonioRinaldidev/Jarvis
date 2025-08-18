@@ -31,11 +31,18 @@ export async function handleChat(request:Request,env:Env,ctx: ExecutionContext){
     const {message, session_id} = await extractRequestData(request);
     const finalSessionId = session_id ||generateSessionId();
 
-    const[memories,summary,messages] = await Promise.all([
-        getImportantMemories(env.DB,5),
-        getCurrentSummary(env.DB,finalSessionId),
-        getRecentHistory(env.DB,finalSessionId,5)
-    ]);
+     console.log('1. Getting memories...');
+    const memories = await getImportantMemories(env.DB, 5);
+    console.log('✅ Memories success');
+    
+    console.log('2. Getting summary...');
+    const summary = await getCurrentSummary(env.DB, finalSessionId);
+    console.log('✅ Summary success');
+    
+    console.log('3. Getting messages...');
+    const messages = await getRecentHistory(env.DB, finalSessionId, 5);
+    console.log('✅ Messages success');
+    
     const contextualPrompt =  buildContextualPrompt(message,messages,summary,memories)
     let jarvisResponse;
     try {
