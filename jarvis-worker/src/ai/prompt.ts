@@ -37,6 +37,56 @@ export function buildContextualPrompt(
  return prompt;
 }
 
+export function buildChatMessages(
+  message: string,
+  history: Conversation[],
+  summary?: string,
+  memories?: Memory[]
+): Array<{ role: "system" | "user" | "assistant", content: string }> {
+  
+  const messages: Array<{ role: "system" | "user" | "assistant", content: string }> = [];
+  
+ 
+  let systemContent = "You are JARVIS, an advanced AI assistant. " +
+                      "Respond naturally and directly. " +
+                      "Never greet repeatedly or restate already known information.";
+  
+  if (summary) {
+    systemContent += `\n\nContext (summary): ${summary}`;
+  }
+  
+  if (memories && memories.length > 0) {
+    systemContent += "\n\nRemembered facts:\n";
+    for (const memory of memories) {
+      systemContent += `- ${memory.content}\n`;
+    }
+  }
+  
+  messages.push({
+    role: "system",
+    content: systemContent
+  });
+  
+  // 🔹 Conversazione recente
+  for (const conv of history) {
+    messages.push({
+      role: "user",
+      content: conv.user_input
+    });
+    messages.push({
+      role: "assistant",
+      content: conv.jarvis_response
+    });
+  }
+  
+  // 🔹 Messaggio corrente
+  messages.push({
+    role: "user",
+    content: message
+  });
+  
+  return messages;
+}
 export async function createSummary(
  ai: any, 
  previousSummary: string | undefined, 
