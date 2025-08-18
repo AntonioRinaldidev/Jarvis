@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "jarvis-worker",
+	"name": "jarvis",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-08-16",
 	"observability": {
