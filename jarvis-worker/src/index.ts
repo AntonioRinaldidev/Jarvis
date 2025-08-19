@@ -44,7 +44,7 @@ export default {
             );
         }
       } else if (request.method === "GET") {
-        switch (url.pathname) {
+        switch (pathname) {
           case '/status':
             return await handleStatus(env);
           default:
