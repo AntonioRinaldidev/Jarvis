@@ -24,7 +24,7 @@
 	
   "vectorize": [
     {
-      "binding": "VECTORIZE",
+      "binding": "VECTORIZE_INDEX",
       "index_name": "jarvis-knowledge"
     }
   ]
