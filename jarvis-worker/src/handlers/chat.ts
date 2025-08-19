@@ -34,44 +34,64 @@ async function extractRequestData(request: Request) {
 export async function handleChat(request: Request, env: Env, ctx: ExecutionContext) {
   const { message, session_id } = await extractRequestData(request);
   const finalSessionId = session_id || generateSessionId();
-  const [memories,summary,messages]= await Promise.all([
+  
+  const [memories, summary, messages] = await Promise.all([
     getImportantMemories(env.DB, 5),
     getCurrentSummary(env.DB, finalSessionId),
     getRecentHistory(env.DB, finalSessionId, 3)
   ]);
+  
   const isFirstMessage = messages.length === 0;
-const ragRetriever = new RAGRetriever(env.VECTORIZE_INDEX, env.AI);
 
-  const contextualPrompt = buildContextualPrompt(message, messages, isFirstMessage, summary, memories);
-  const chatMessages = await buildChatMessagesWithRAG(
-  message,
-  messages,
-  isFirstMessage,
-  ragRetriever,  // <- aggiungi questo
-  summary,
-  memories
-);
+  // 🔹 INIZIALIZZA RAG
+  const ragRetriever = new RAGRetriever(env.VECTORIZE_INDEX, env.AI);
+
+  // 🔹 COSTRUISCI MESSAGGI CON FALLBACK
+  let chatMessages: Array<{ role: "system" | "user" | "assistant", content: string }>;
+  let usingRAG = false;
+
+  try {
+    chatMessages = await buildChatMessagesWithRAG(
+      message,
+      messages,
+      isFirstMessage,
+      ragRetriever,
+      summary,
+      memories
+    );
+    usingRAG = true;
+    console.log('✅ Using RAG-enhanced chat');
+  } catch (ragError) {
+    console.warn('⚠️ RAG failed, falling back to normal chat:', ragError);
+    chatMessages = buildChatMessages(
+      message,
+      messages,
+      isFirstMessage,
+      summary,
+      memories
+    );
+    usingRAG = false;
+  }
+
   let jarvisResponse: string;
 
   try {
-    // scegli se usare messages o prompt
     const modelId = '@cf/meta/llama-3.1-8b-instruct';
     let aiResponse: any;
 
+    // Usa sempre chatMessages (formato moderno)
     if (modelId.includes("instruct") || modelId.includes("chat")) {
-        aiResponse = await env.AI.run(modelId, {
+      aiResponse = await env.AI.run(modelId, {
         messages: chatMessages,
       });
     } else {
-      
+      // Fallback per modelli vecchi (se necessario)
+      const contextualPrompt = buildChatMessages(message, messages, isFirstMessage, summary, memories);
       aiResponse = await env.AI.run(modelId, {
-        prompt: contextualPrompt,
-        
+        messages: contextualPrompt,
       });
     }
-
-
-
+    console.log(aiResponse);
     if (typeof aiResponse === 'string') {
       jarvisResponse = aiResponse;
     } else if (aiResponse && typeof aiResponse === 'object') {
@@ -88,9 +108,14 @@ const ragRetriever = new RAGRetriever(env.VECTORIZE_INDEX, env.AI);
     return Response.json({
       error: "JARVIS is temporarily unavailable",
       details: "AI service error"
-    }, { status: 500 });
+    }, { 
+      status: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      }
+    });
   }
-
 
   const currentMessageCount = await saveConversation(env.DB, message, jarvisResponse, finalSessionId);
   await updateMemoryIfImportant(env.DB, message);
@@ -105,7 +130,8 @@ const ragRetriever = new RAGRetriever(env.VECTORIZE_INDEX, env.AI);
     session_id: finalSessionId,
     status: "online",
     timestamp: new Date().toISOString(),
-    context_used: messages.length
+    context_used: messages.length,
+    rag_enabled: usingRAG // 🔹 AGGIUNGI QUESTO per debug
   }, {
     headers: {
       "Access-Control-Allow-Origin": "*",

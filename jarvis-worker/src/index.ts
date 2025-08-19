@@ -1,6 +1,9 @@
+// src/index.ts
 import type { Env } from './types/env.js';
 import { handleChat } from './handlers/chat.js';
 import { handleStatus } from './handlers/status.js';
+import { handleUploadDocument } from './handlers/upload-document'; 
+import { handleTestVectorize } from './handlers/test-vectorize';   
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -16,11 +19,33 @@ export default {
     }
 
     try {
+      const url = new URL(request.url); //
+      
       // Route requests to appropriate handlers
       if (request.method === "POST") {
-        return await handleChat(request, env, ctx);
+        switch (url.pathname) { 
+          case '/chat':
+            return await handleChat(request, env, ctx);
+          case '/upload-document': 
+            return await handleUploadDocument(request, env);
+          case '/test-vectorize': 
+            return await handleTestVectorize(request, env);
+          default:
+            return Response.json(
+              { error: "Endpoint not found" },
+              { status: 404 }
+            );
+        }
       } else if (request.method === "GET") {
-        return await handleStatus(env);
+        switch (url.pathname) {
+          case '/status':
+            return await handleStatus(env);
+          default:
+            return Response.json(
+              { error: "Endpoint not found" },
+              { status: 404 }
+            );
+        }
       } else {
         return Response.json(
           { error: "Method not allowed" },
