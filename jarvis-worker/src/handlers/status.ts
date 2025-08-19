@@ -1,7 +1,19 @@
 import type { Env } from '../types/env.js';
 import { getJarvisStats } from '../database/index.js';
 
-export async function handleStatus(env: Env): Promise<Response> {
+export async function handleStatus(request:Request,env: Env): Promise<Response> {
+   if (request) {
+    const clientIP = request.headers.get('CF-Connecting-IP') || 
+                     request.headers.get('X-Forwarded-For') || 
+                     request.headers.get('X-Real-IP') || 
+                     'unknown';
+    
+    console.log(`🔍 Status request from IP: ${clientIP}`);
+    console.log(`📱 User-Agent: ${request.headers.get('User-Agent')}`);
+    console.log(`🌐 Referer: ${request.headers.get('Referer') || 'direct'}`);
+    console.log(`🗺️ Country: ${request.headers.get('CF-IPCountry') || 'unknown'}`);
+    console.log(`⚡ CF-Ray: ${request.headers.get('CF-RAY')}`);
+  }
   try {
     const stats = await getJarvisStats(env.DB);
 

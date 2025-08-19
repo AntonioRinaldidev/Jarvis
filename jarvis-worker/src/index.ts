@@ -46,7 +46,7 @@ export default {
       } else if (request.method === "GET") {
         switch (pathname) {
           case '/status':
-            return await handleStatus(env);
+            return await handleStatus(request,env);
           default:
             return Response.json(
               { error: "Endpoint not found" },
