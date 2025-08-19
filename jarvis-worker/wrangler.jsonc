@@ -20,7 +20,15 @@
 			"database_name": "jarvis-memory",
 			"database_id": "3ff7de0d-6b6a-4694-af3c-68b2ca9fe07b"
 		}
-	]
+	],
+	
+  "vectorize": [
+    {
+      "binding": "VECTORIZE",
+      "index_name": "jarvis-knowledge"
+    }
+  ]
+
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

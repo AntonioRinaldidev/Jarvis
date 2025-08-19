@@ -7,7 +7,8 @@ import {
 import { generateSessionId } from "../utils/session";
 import type { Env } from "../types/env";
 import { getCurrentSummary, handleSummarization } from "./summarization";
-import { buildContextualPrompt, buildChatMessages } from "../ai/prompt.js";
+import { buildContextualPrompt, buildChatMessages, buildChatMessagesWithRAG } from "../ai/prompt";
+import { RAGRetriever } from "../ai/rag-retriever";
 
 async function extractRequestData(request: Request) {
   let body;
@@ -39,10 +40,17 @@ export async function handleChat(request: Request, env: Env, ctx: ExecutionConte
     getRecentHistory(env.DB, finalSessionId, 3)
   ]);
   const isFirstMessage = messages.length === 0;
-
+const ragRetriever = new RAGRetriever(env.VECTORIZE_INDEX, env.AI);
 
   const contextualPrompt = buildContextualPrompt(message, messages, isFirstMessage, summary, memories);
-  const chatMessages = buildChatMessages(message, messages, isFirstMessage, summary, memories);
+  const chatMessages = await buildChatMessagesWithRAG(
+  message,
+  messages,
+  isFirstMessage,
+  ragRetriever,  // <- aggiungi questo
+  summary,
+  memories
+);
   let jarvisResponse: string;
 
   try {
