@@ -20,10 +20,17 @@ export default {
 
     try {
       const url = new URL(request.url); //
-      
+            let pathname = url.pathname;
+      if (pathname.startsWith('/api/jarvis')) {
+        pathname = pathname.replace('/api/jarvis', '');
+      }
+      // Se pathname è vuoto, imposta come '/'
+      if (!pathname || pathname === '') {
+        pathname = '/';
+      }
       // Route requests to appropriate handlers
       if (request.method === "POST") {
-        switch (url.pathname) { 
+        switch (pathname) { 
           case '/chat':
             return await handleChat(request, env, ctx);
           case '/upload-document': 
