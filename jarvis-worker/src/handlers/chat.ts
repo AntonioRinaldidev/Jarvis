@@ -75,7 +75,7 @@ export async function handleChat(request: Request, env: Env, ctx: ExecutionConte
   let jarvisResponse: string;
 
   try {
-    const modelId = '@cf/meta/llama-3.1-8b-instruct';
+    const modelId = '@cf/meta/llama-3.2-3b-instruct';
     let aiResponse: any;
 
     // Usa sempre chatMessages (formato moderno)
