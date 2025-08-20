@@ -117,7 +117,6 @@ export async function handleChat(request: Request, env: Env, ctx: ExecutionConte
   }
 
   const currentMessageCount = await saveConversation(env.DB, message, jarvisResponse, finalSessionId);
-  await updateMemoryIfImportant(env.DB, message);
 
   ctx.waitUntil(
     handleSummarization(env, finalSessionId, currentMessageCount)

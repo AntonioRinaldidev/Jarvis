@@ -5,7 +5,7 @@ import { handleStatus } from './handlers/status.js';
 import { handleUploadDocument } from './handlers/upload-document'; 
 import { handleTestVectorize } from './handlers/test-vectorize';   
 import { RateLimiter } from './middleware/simpleRateLimiter'
-import { saveMemoryToRAG, getRelevantMemoriesRAG, listAllMemoriesRAG } from './ai/rag-memory';
+import {  getRelevantMemoriesRAG, listAllMemoriesRAG } from './ai/rag-memory';
 
 
 
@@ -87,18 +87,6 @@ export default {
           } catch (error) {
             return Response.json({ error: "Failed to upload Document" }, { status: 500 });
           }
-          case '/rag/save':
-            try {
-              const body = await request.json() as { content: string; category?: string };
-              const result = await saveMemoryToRAG(env.VECTORIZE_INDEX, env.AI, body.content, body.category);
-              const ragResponse = Response.json({ success: result });
-              Object.entries(baseHeaders).forEach(([key, value]) => {
-                ragResponse.headers.set(key, value);
-              });
-              return ragResponse;
-            } catch (error) {
-              return Response.json({ error: "Failed to save memory" }, { status: 500 });
-            }
 
           case '/rag/search':
             try {
