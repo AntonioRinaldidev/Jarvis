@@ -42,12 +42,12 @@ export async function handleUploadDocument(request: Request, env: Env): Promise<
     let deletedChunks = 0;
     try {
 
-      const dummyVector = new Array(1024).fill(0.001); 
+      const dummyVector = new Array(768).fill(0.001); 
       
       const existingDocs = await env.VECTORIZE_INDEX.query(dummyVector, {
         topK: 100, 
         returnValues: false,
-        returnMetadata: 'indexed'
+        returnMetadata: true
       });
       
 
