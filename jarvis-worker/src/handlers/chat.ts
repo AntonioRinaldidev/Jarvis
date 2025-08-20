@@ -35,18 +35,17 @@ export async function handleChat(request: Request, env: Env, ctx: ExecutionConte
   const { message, session_id } = await extractRequestData(request);
   const finalSessionId = session_id || generateSessionId();
   
-  const [memories, summary, messages] = await Promise.all([
-    getImportantMemories(env.DB, 5),
+  const [ summary, messages] = await Promise.all([
+
     getCurrentSummary(env.DB, finalSessionId),
     getRecentHistory(env.DB, finalSessionId, 3)
   ]);
   
   const isFirstMessage = messages.length === 0;
 
-  // 🔹 INIZIALIZZA RAG
   const ragRetriever = new RAGRetriever(env.VECTORIZE_INDEX, env.AI);
 
-  // 🔹 COSTRUISCI MESSAGGI CON FALLBACK
+
   let chatMessages: Array<{ role: "system" | "user" | "assistant", content: string }>;
   let usingRAG = false;
 
@@ -57,7 +56,7 @@ export async function handleChat(request: Request, env: Env, ctx: ExecutionConte
       isFirstMessage,
       ragRetriever,
       summary,
-      memories
+  
     );
     usingRAG = true;
     console.log('✅ Using RAG-enhanced chat');
@@ -68,7 +67,7 @@ export async function handleChat(request: Request, env: Env, ctx: ExecutionConte
       messages,
       isFirstMessage,
       summary,
-      memories
+
     );
     usingRAG = false;
   }
@@ -86,7 +85,7 @@ export async function handleChat(request: Request, env: Env, ctx: ExecutionConte
       });
     } else {
       // Fallback per modelli vecchi (se necessario)
-      const contextualPrompt = buildChatMessages(message, messages, isFirstMessage, summary, memories);
+      const contextualPrompt = buildChatMessages(message, messages, isFirstMessage, summary);
       aiResponse = await env.AI.run(modelId, {
         messages: contextualPrompt,
       });

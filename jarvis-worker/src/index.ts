@@ -5,6 +5,8 @@ import { handleStatus } from './handlers/status.js';
 import { handleUploadDocument } from './handlers/upload-document'; 
 import { handleTestVectorize } from './handlers/test-vectorize';   
 import { RateLimiter } from './middleware/simpleRateLimiter'
+import { saveMemoryToRAG, getRelevantMemoriesRAG, listAllMemoriesRAG } from './ai/rag-memory';
+
 
 
 export default {
@@ -66,30 +68,54 @@ export default {
       if (request.method === "POST") {
         switch (pathname) { 
           case '/chat':
-            const chatResponse = await handleChat(request, env, ctx);
+            try {
+                          const chatResponse = await handleChat(request, env, ctx);
             Object.entries(baseHeaders).forEach(([key, value]) => {
               chatResponse.headers.set(key, value);
             });
             return chatResponse;
+            } catch (error) {
+               return Response.json({ error: "Failed to send Message" }, { status: 500 });
+            }
          case '/upload-document':
-            const uploadResponse = await handleUploadDocument(request, env);
+          try {
+                        const uploadResponse = await handleUploadDocument(request, env);
             Object.entries(baseHeaders).forEach(([key, value]) => {
               uploadResponse.headers.set(key, value);
             });
             return uploadResponse;
-            
-          case '/test-vectorize':
-            const testResponse = await handleTestVectorize(request, env);
-            Object.entries(baseHeaders).forEach(([key, value]) => {
-              testResponse.headers.set(key, value);
-            });
-            return testResponse;
+          } catch (error) {
+            return Response.json({ error: "Failed to upload Document" }, { status: 500 });
+          }
+          case '/rag/save':
+            try {
+              const body = await request.json() as { content: string; category?: string };
+              const result = await saveMemoryToRAG(env.VECTORIZE_INDEX, env.AI, body.content, body.category);
+              const ragResponse = Response.json({ success: result });
+              Object.entries(baseHeaders).forEach(([key, value]) => {
+                ragResponse.headers.set(key, value);
+              });
+              return ragResponse;
+            } catch (error) {
+              return Response.json({ error: "Failed to save memory" }, { status: 500 });
+            }
+
+          case '/rag/search':
+            try {
+              const body = await request.json() as { query: string; threshold?: number };
+              const results = await getRelevantMemoriesRAG(env.VECTORIZE_INDEX, env.AI, body.query, body.threshold);
+              const searchResponse = Response.json({ results });
+              Object.entries(baseHeaders).forEach(([key, value]) => {
+                searchResponse.headers.set(key, value);
+              });
+              return searchResponse;
+            } catch (error) {
+              return Response.json({ error: "Failed to search memories" }, { status: 500 });
+            }
+
           default:
-            return Response.json(
-              { error: "Endpoint not found" },
-              { status: 404 }
-            );
-        }
+            return Response.json({ error: "Endpoint not found" }, { status: 404 });
+                  }
       } else if (request.method === "GET") {
         switch (pathname) {
           case '/status':
@@ -99,12 +125,21 @@ export default {
               statusResponse.headers.set(key, value);
             });
             return statusResponse;
+          case '/rag/list':
+            try {
+              const memories = await listAllMemoriesRAG(env.VECTORIZE_INDEX);
+              const listResponse = Response.json({ memories });
+              Object.entries(baseHeaders).forEach(([key, value]) => {
+                listResponse.headers.set(key, value);
+              });
+              return listResponse;
+            } catch (error) {
+              return Response.json({ error: "Failed to list memories" }, { status: 500 });
+            }
+
           default:
-            return Response.json(
-              { error: "Endpoint not found" },
-              { status: 404 }
-            );
-        }
+            return Response.json({ error: "Endpoint not found" }, { status: 404 });
+                  }
       } else {
         return Response.json(
           { error: "Method not allowed" },
