@@ -46,7 +46,8 @@ export async function handleUploadDocument(request: Request, env: Env): Promise<
       
       const existingDocs = await env.VECTORIZE_INDEX.query(dummyVector, {
         topK: 100, 
-        returnMetadata: true
+        returnValues: false,
+        returnMetadata: 'indexed'
       });
       
 
