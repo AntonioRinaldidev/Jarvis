@@ -40,12 +40,16 @@ export async function handleUploadDocument(request: Request, env: Env): Promise<
     
 
     let deletedChunks = 0;
-    try {
 
-      const dummyVector = new Array(768).fill(0.001); 
+
+    try {
+      // Usa il titolo per creare una query semantica
+      const titleEmbedding = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
+        text: [body.title.trim()]
+      });
       
-      const existingDocs = await env.VECTORIZE_INDEX.query(dummyVector, {
-        topK: 100, 
+      const existingDocs = await env.VECTORIZE_INDEX.query(titleEmbedding.data[0], {
+        topK: 20, 
         returnValues: false,
         returnMetadata: true
       });
@@ -63,7 +67,6 @@ export async function handleUploadDocument(request: Request, env: Env): Promise<
       }
     } catch (deleteError) {
       console.warn('⚠️ Could not check for existing documents:', deleteError);
- 
     }
     
 
