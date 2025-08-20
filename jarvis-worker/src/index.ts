@@ -100,34 +100,7 @@ export default {
             } catch (error) {
               return Response.json({ error: "Failed to search memories" }, { status: 500 });
             }
-            case '/debug-rag':
-  try {
-    const dummyVector = new Array(768).fill(0.001);
-    const allDocs = await env.VECTORIZE_INDEX.query(dummyVector, {
-      topK: 10,
-      returnValues: false,
-      returnMetadata: true
-    });
-    
-    const debugResponse = Response.json({
-      success: true,
-      total_found: allDocs.matches.length,
-      documents: allDocs.matches.map((match: { id: any; metadata: { title: any; source: any; content: string; }; }) => ({
-        id: match.id,
-        title: match.metadata?.title || 'NO TITLE',
-        source: match.metadata?.source || 'NO SOURCE',
-        content_preview: match.metadata?.content?.substring(0, 100) + '...' || 'NO CONTENT',
-        all_metadata: match.metadata
-      }))
-    });
-    
-    Object.entries(baseHeaders).forEach(([key, value]) => {
-      debugResponse.headers.set(key, value);
-    });
-    return debugResponse;
-  } catch (error:any) {
-    return Response.json({ error: error.message }, { status: 500 });
-  }
+
           default:
             return Response.json({ error: "Endpoint not found" }, { status: 404 });
                   }
@@ -151,7 +124,34 @@ export default {
             } catch (error) {
               return Response.json({ error: "Failed to list memories" }, { status: 500 });
             }
-
+          case '/debug-rag':
+            try {
+              const dummyVector = new Array(768).fill(0.001);
+              const allDocs = await env.VECTORIZE_INDEX.query(dummyVector, {
+                topK: 10,
+                returnValues: false,
+                returnMetadata: true
+              });
+              
+              const debugResponse = Response.json({
+                success: true,
+                total_found: allDocs.matches.length,
+                documents: allDocs.matches.map((match: { id: any; metadata: { title: any; source: any; content: string; }; }) => ({
+                  id: match.id,
+                  title: match.metadata?.title || 'NO TITLE',
+                  source: match.metadata?.source || 'NO SOURCE',
+                  content_preview: match.metadata?.content?.substring(0, 100) + '...' || 'NO CONTENT',
+                  all_metadata: match.metadata
+                }))
+              });
+              
+              Object.entries(baseHeaders).forEach(([key, value]) => {
+                debugResponse.headers.set(key, value);
+              });
+              return debugResponse;
+            } catch (error:any) {
+              return Response.json({ error: error.message }, { status: 500 });
+            }
           default:
             return Response.json({ error: "Endpoint not found" }, { status: 404 });
                   }
