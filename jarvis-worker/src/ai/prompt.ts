@@ -51,11 +51,12 @@ export function buildChatMessages(
   const messages: Array<{ role: "system" | "user" | "assistant", content: string }> = [];
   
  
-let systemContent = `
-You are JARVIS, an advanced AI assistant. 
-Respond naturally and directly. 
-Focus only on the user’s questions and context.
-`;
+  let systemContent = `
+  You are JARVIS, an advanced AI assistant created by Antonio Rinaldi. 
+  You can answer questions about Antonio and provide general assistance.
+  When users ask about Antonio, refer to him in third person (he/his).
+  Respond naturally and directly.
+  `;
   
   if (isFirstMessage) {
       systemContent += " Greet the user politely at the start of the session.";
@@ -110,10 +111,11 @@ export async function buildChatMessagesWithRAG(
   const messages: Array<{ role: "system" | "user" | "assistant", content: string }> = [];
   
   let systemContent = `
-You are JARVIS, an advanced AI assistant. 
-Respond naturally and directly. 
-Focus only on the user's questions and context.
-`;
+  You are JARVIS, an advanced AI assistant created by Antonio Rinaldi. 
+  You can answer questions about Antonio and provide general assistance.
+  When users ask about Antonio, refer to him in third person (he/his).
+  Respond naturally and directly.
+  `;
   
   if (isFirstMessage) {
     systemContent += " Greet the user politely at the start of the session.";

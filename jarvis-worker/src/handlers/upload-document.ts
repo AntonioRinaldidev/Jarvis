@@ -11,7 +11,7 @@ export async function handleUploadDocument(request: Request, env: Env): Promise<
   try {
     const body = await request.json() as UploadRequest;
     
-    // Validazione input
+
     if (!body.title || !body.content) {
       return Response.json({
         success: false,
@@ -38,7 +38,34 @@ export async function handleUploadDocument(request: Request, env: Env): Promise<
       });
     }
     
-    // Inizializza RAG Ingestion
+
+    let deletedChunks = 0;
+    try {
+
+      const dummyVector = new Array(1024).fill(0.001); 
+      
+      const existingDocs = await env.VECTORIZE_INDEX.query(dummyVector, {
+        topK: 100, 
+        returnMetadata: true
+      });
+      
+
+      const matchingDocs = existingDocs.matches.filter(
+        (match: any) => match.metadata?.title === body.title.trim()
+      );
+      
+      if (matchingDocs.length > 0) {
+        const idsToDelete = matchingDocs.map((match: any) => match.id);
+        await env.VECTORIZE_INDEX.deleteByIds(idsToDelete);
+        deletedChunks = idsToDelete.length;
+        console.log(`🗑️ Deleted ${deletedChunks} existing chunks for "${body.title}"`);
+      }
+    } catch (deleteError) {
+      console.warn('⚠️ Could not check for existing documents:', deleteError);
+ 
+    }
+    
+
     const ragIngestion = new RAGIngestion(env.VECTORIZE_INDEX, env.AI);
     
     // Crea documento
@@ -53,17 +80,23 @@ export async function handleUploadDocument(request: Request, env: Env): Promise<
       }
     };
     
-    console.log(`Uploading document: ${doc.metadata.title}`);
+    console.log(`📤 Uploading document: ${doc.metadata.title}`);
     
-    // Carica nel sistema RAG
+
     await ragIngestion.ingestDocument(doc);
+    
+    const estimatedChunks = Math.ceil(doc.content.length / 512);
     
     return Response.json({
       success: true,
       documentId: doc.id,
       title: doc.metadata.title,
-      chunksCreated: Math.ceil(doc.content.length / 512), // Stima
-      message: `Document "${body.title}" uploaded and processed successfully`
+      chunksCreated: estimatedChunks,
+      deletedChunks: deletedChunks, 
+      action: deletedChunks > 0 ? 'updated' : 'created', 
+      message: deletedChunks > 0 
+        ? `Document "${body.title}" updated successfully (replaced ${deletedChunks} existing chunks)`
+        : `Document "${body.title}" uploaded and processed successfully`
     }, {
       headers: {
         "Access-Control-Allow-Origin": "*",
