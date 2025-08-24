@@ -5,13 +5,7 @@ export interface Conversation{
     session_id: string;
 }
 
-export interface Memory{
-    id?: number;
-    memory_type:string;
-    content:string;
-    importance_score:number;
-    created_at?:string;
-}
+
 
 export interface SessionStats{
     session_id:string;

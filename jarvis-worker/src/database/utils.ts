@@ -1,4 +1,4 @@
-import type { Conversation, Memory, SessionStats, JarvisStats } from '../types/database.js';
+import type { Conversation,  SessionStats, JarvisStats } from '../types/database.js';
 
 export function mapDbResults<T>(
   results: Record<string, unknown>[] | undefined,
@@ -16,15 +16,6 @@ export function toConversation(row: Record<string, unknown>): Conversation {
   };
 }
 
-export function toMemory(row: Record<string, unknown>): Memory {
-  return {
-    id: row.id ? Number(row.id) : undefined,
-    memory_type: String(row.memory_type || ''),
-    content: String(row.content || ''),
-    importance_score: Number(row.importance_score || 0),
-    created_at: row.created_at ? String(row.created_at) : undefined
-  };
-}
 
 export function toSessionStats(row: Record<string, unknown>): SessionStats {
   return {

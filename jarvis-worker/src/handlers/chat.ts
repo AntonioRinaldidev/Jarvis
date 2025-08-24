@@ -1,8 +1,6 @@
 import { 
-  getImportantMemories, 
   getRecentHistory, 
   saveConversation, 
-  updateMemoryIfImportant 
 } from "../database";
 import { generateSessionId } from "../utils/session";
 import type { Env } from "../types/env";

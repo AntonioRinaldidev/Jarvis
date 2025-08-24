@@ -1,9 +1,9 @@
 // src/index.ts
 import type { Env } from './types/env.js';
-import { handleChat } from './handlers/chat.js';
+
 import { handleStatus } from './handlers/status.js';
 import { handleUploadDocument } from './handlers/upload-document'; 
-import { handleTestVectorize } from './handlers/test-vectorize';   
+
 import { RateLimiter } from './middleware/simpleRateLimiter'
 import {  getRelevantMemoriesRAG, listAllMemoriesRAG } from './ai/rag-memory';
 import { JarvisSessionDO as _JarvisSessionDO } from './durable-objects/session-do';

@@ -3,7 +3,6 @@ export {
   mapDbResults, 
   mapDbResult, 
   toConversation, 
-  toMemory, 
   toSessionStats, 
   toJarvisStats 
 } from './utils.js';
@@ -16,15 +15,7 @@ export {
   getUserMessageNumber 
 } from './conversations.js';
 
-// Memory
-export { 
-  updateMemoryIfImportant, 
-  saveMemory, 
-  getMemoriesByType, 
-  getImportantMemories,
-  getAllMemories,
-  deleteMemory 
-} from './memory.js';
+
 
 // Stats
 export { 
