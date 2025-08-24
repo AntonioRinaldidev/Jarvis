@@ -1,8 +1,8 @@
-import { generateSessionId } from "../utils/session";
-import { getCurrentSummary, handleSummarization } from '../handlers/summarization';
-import { getRecentHistory, saveConversation } from '../database/index';
-import { buildChatMessages, buildChatMessagesWithRAG } from '../ai/prompt';
-import { RAGRetriever } from '../ai/rag-retriever';
+import { generateSessionId } from "../utils/session.js";
+import { getCurrentSummary, handleSummarization } from '../handlers/summarization.js';
+import { getRecentHistory, saveConversation } from '../database/index.js';
+import { buildChatMessages, buildChatMessagesWithRAG } from '../ai/prompt.js';
+import { RAGRetriever } from '../ai/rag-retriever.js';
 
 
 export class JarvisSessionDO{

@@ -6,7 +6,7 @@ import { handleUploadDocument } from './handlers/upload-document';
 import { handleTestVectorize } from './handlers/test-vectorize';   
 import { RateLimiter } from './middleware/simpleRateLimiter'
 import {  getRelevantMemoriesRAG, listAllMemoriesRAG } from './ai/rag-memory';
-export {JarvisSessionDO} from './durable-objects/session-do';
+import { JarvisSessionDO } from './durable-objects/session-do';
 import { generateSessionId } from './utils/session.js';
 
 
@@ -287,3 +287,5 @@ export default {
     }
   },
 };
+
+export { JarvisSessionDO };
