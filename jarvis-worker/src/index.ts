@@ -6,9 +6,9 @@ import { handleUploadDocument } from './handlers/upload-document';
 import { handleTestVectorize } from './handlers/test-vectorize';   
 import { RateLimiter } from './middleware/simpleRateLimiter'
 import {  getRelevantMemoriesRAG, listAllMemoriesRAG } from './ai/rag-memory';
-import { JarvisSessionDO } from './durable-objects/session-do';
+export {JarvisSessionDO} from './durable-objects/session-do';
 import { generateSessionId } from './utils/session.js';
-export {JarvisSessionDO}
+
 
 async function findAvailableDO(env:Env): Promise<string|null>{
   const POOL_SIZE = 5;
