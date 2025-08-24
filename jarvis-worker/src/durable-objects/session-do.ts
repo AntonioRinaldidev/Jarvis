@@ -94,7 +94,9 @@ export class JarvisSessionDO extends DurableObject<Env>{
 
         
         if (data.type === 'chat') {
-            this.handleChatMessage(ws, data.message);
+            const sessionId = data.sessionId || this.currentSessionId || generateSessionId();
+			this.currentSessionId = sessionId; // opzionale, per fallback
+            this.handleChatMessage(ws, data.message,sessionId);
         } else if (data.type === 'ping') {
             ws.send(JSON.stringify({ type: 'pong' }));
         } else {
@@ -114,7 +116,7 @@ export class JarvisSessionDO extends DurableObject<Env>{
         this.release();
     }
 
-private async handleChatMessage(ws: WebSocket, userMessage: string): Promise<void> {
+private async handleChatMessage(ws: WebSocket, userMessage: string,sessionId:string): Promise<void> {
     console.log('🤖 Processing chat message:', userMessage);
     
     try {
@@ -126,8 +128,8 @@ private async handleChatMessage(ws: WebSocket, userMessage: string): Promise<voi
         
 
         const [summary, messages] = await Promise.all([
-            getCurrentSummary(this.env.DB, this.currentSessionId!),
-            getRecentHistory(this.env.DB, this.currentSessionId!, 3)
+            getCurrentSummary(this.env.DB, sessionId),
+            getRecentHistory(this.env.DB, sessionId, 3)
         ]);
         
         const isFirstMessage = messages.length === 0;
@@ -162,19 +164,19 @@ private async handleChatMessage(ws: WebSocket, userMessage: string): Promise<voi
 
 
         const currentMessageCount = await saveConversation(
-            this.env.DB, userMessage, jarvisResponse, this.currentSessionId!
+            this.env.DB, userMessage, jarvisResponse,sessionId
         );
 
 
         this.ctx.waitUntil(
-            handleSummarization(this.env, this.currentSessionId!, currentMessageCount)
+            handleSummarization(this.env, sessionId, currentMessageCount)
                 .catch(error => console.error('Background summarization failed:', error))
         );
 
         ws.send(JSON.stringify({
             type: 'chat_response',
             message: jarvisResponse,
-            sessionId: this.currentSessionId,
+            sessionId: sessionId,
             usingRAG: usingRAG,
             contextUsed: messages.length
         }));
