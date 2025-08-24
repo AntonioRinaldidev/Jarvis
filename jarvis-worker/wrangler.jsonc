@@ -33,7 +33,6 @@
 		{
 			"name": "JARVIS_SESSION_DO",
 			"class_name": "JarvisSessionDO",
-			"script_name": "jarvis"
 		}
 	]
   }
