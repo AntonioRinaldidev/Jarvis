@@ -27,7 +27,16 @@
       "binding": "VECTORIZE_INDEX",
       "index_name": "jarvis-knowledge"
     }
-  ]
+  ],
+  "durable_objects": {
+	"bindings": [
+		{
+			"name": "JARVIS_SESSION_DO",
+			"class_name": "JarvisSessionDO",
+			"script_name": "jarvis"
+		}
+	]
+  }
 
 	/**
 	 * Smart Placement

@@ -6,11 +6,60 @@ import { handleUploadDocument } from './handlers/upload-document';
 import { handleTestVectorize } from './handlers/test-vectorize';   
 import { RateLimiter } from './middleware/simpleRateLimiter'
 import {  getRelevantMemoriesRAG, listAllMemoriesRAG } from './ai/rag-memory';
+import { JarvisSessionDO } from './durable-objects/session-do';
+import { generateSessionId } from './utils/session.js';
+export {JarvisSessionDO}
 
+async function findAvailableDO(env:Env): Promise<string|null>{
+  const POOL_SIZE = 5;
 
+  for (let i = 0; i <POOL_SIZE; i++){
+    const doName = `jarvis-name-${i}`;
+
+    try{
+      const doId = env.JARVIS_SESSION_DO.idFromName(doName);
+      const doStub = env.JARVIS_SESSION_DO.get(doId);
+
+      const statusResponse =  await doStub.fetch(new Request(`https://${doName}.session.jarvis/status`))
+      const status = await statusResponse.json() as { available : boolean}
+
+      if(status.available){
+        return doName;
+      }
+
+    }catch(error){
+      continue;
+    }
+  }
+  return null;
+}
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    if(request.headers.get("Upgrade")==="websocket"){
+
+      const availableDOName = await findAvailableDO(env);
+      const url = new URL(request.url);
+      const sessionId = url.searchParams.get('session_id') || generateSessionId();
+      
+      if(!availableDOName){
+        return new Response('All connection busy, try again later',{status:503,
+        headers: { 
+          'Retry-After': '5',
+          'Access-Control-Allow-Origin': '*'
+        }})
+      }
+      
+      const doId = env.JARVIS_SESSION_DO.idFromName(availableDOName);
+      const doStub = env.JARVIS_SESSION_DO.get(doId);
+      
+
+      const modifiedRequest = new Request(request.url + `&do_session_id=${sessionId}`, {
+      headers: request.headers
+    });
+    
+      return doStub.fetch(modifiedRequest);      
+    }
     // Handle CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, {
@@ -25,6 +74,7 @@ export default {
     try {
       const url = new URL(request.url); //
             let pathname = url.pathname;
+      
       if (pathname.startsWith('/api/jarvis')) {
         pathname = pathname.replace('/api/jarvis', '');
       }
@@ -152,6 +202,67 @@ export default {
             } catch (error:any) {
               return Response.json({ error: error.message }, { status: 500 });
             }
+            case '/test-do':
+              try {
+                // Crea/ottieni un DO instance
+                const doId = env.JARVIS_SESSION_DO.newUniqueId();
+                const doStub = env.JARVIS_SESSION_DO.get(doId);
+                
+                // Chiama il DO
+                const doResponse = await doStub.fetch(new Request('https://fake.com/test'));
+                const doText = await doResponse.text();
+                
+                const testResponse = Response.json({ 
+                  message: "DO is working!", 
+                  doResponse: doText 
+                });
+                
+                Object.entries(baseHeaders).forEach(([key, value]) => {
+                  testResponse.headers.set(key, value);
+                });
+                return testResponse;
+              } catch (error: any) {
+                return Response.json({ error: error.message }, { status: 500 });
+              }
+            case '/test-do-status':
+                try {
+                  // Ottieni un DO specifico
+                  const doId = env.JARVIS_SESSION_DO.idFromName('test-do-1');
+                  const doStub = env.JARVIS_SESSION_DO.get(doId);
+                  
+                  // Chiama l'endpoint /status del DO
+                  const doResponse = await doStub.fetch(new Request('https://fake.com/status'));
+                  const doData = await doResponse.json();
+                  
+                  const testResponse = Response.json({ 
+                    message: "DO status test",
+                    doStatus: doData
+                  });
+                  
+                  Object.entries(baseHeaders).forEach(([key, value]) => {
+                    testResponse.headers.set(key, value);
+                  });
+                  return testResponse;
+                } catch (error: any) {
+                  return Response.json({ error: error.message }, { status: 500 });
+                }
+            case '/test-pool':
+              try {
+                const availableDO = await findAvailableDO(env);
+                
+                const testResponse = Response.json({
+                  message: "Pool manager test",
+                  availableDO: availableDO,
+                  poolSize: 5
+                });
+                
+                Object.entries(baseHeaders).forEach(([key, value]) => {
+                  testResponse.headers.set(key, value);
+                });
+                return testResponse;
+              } catch (error: any) {
+                return Response.json({ error: error.message }, { status: 500 });
+              }
           default:
             return Response.json({ error: "Endpoint not found" }, { status: 404 });
                   }
