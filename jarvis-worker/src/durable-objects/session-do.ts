@@ -34,6 +34,7 @@ export class JarvisSessionDO extends DurableObject<Env>{
         if(request.headers.get("Upgrade")==="websocket"){
             const  url = new URL(request.url);
             const sessionId = url.searchParams.get('do_session_id') || generateSessionId();
+            console.log("DO sessionId received: ",sessionId)
 
             const claimResult = await this.tryClaim(sessionId);
             if(!claimResult.success){
