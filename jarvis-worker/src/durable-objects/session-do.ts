@@ -48,11 +48,21 @@ export class JarvisSessionDO extends DurableObject<Env>{
             this.websocket = server;
 
 
-            server.send(JSON.stringify({
-                type: 'connected',
-                message: `JARVIS Online\n\nHello! I'm JARVIS, your personal AI assistant. I can:\n\n• Chat and answer your questions\n• Access the portfolio knowledge base\n• Analyze documents and projects\n• Help with technical information\n\nHow can I help you today?`,
-                sessionId: sessionId
-            }))
+            const previousMessages = await getRecentHistory(this.env.DB, sessionId, 100);
+
+            if (previousMessages.length > 0) {
+                server.send(JSON.stringify({
+                    type: 'chat_history',
+                    messages: previousMessages,
+                    sessionId: sessionId
+                }));
+            } else {
+                server.send(JSON.stringify({
+                    type: 'connected',
+                    message: `JARVIS Online\n\nHello! I'm JARVIS, your personal AI assistant. I can:\n\n• Chat and answer your questions\n• Access the portfolio knowledge base\n• Analyze documents and projects\n• Help with technical information\n\nHow can I help you today?`,
+                    sessionId: sessionId
+                }));
+            }
 
             return new Response(null,{status:101,webSocket:client})
         }
