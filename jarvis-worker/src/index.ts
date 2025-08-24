@@ -131,7 +131,37 @@ export default {
           } catch (error) {
             return Response.json({ error: "Failed to upload Document" }, { status: 500 });
           }
-
+          case '/debug/rag/delete':
+          try {
+            const body = await request.json() as { title: string };
+            
+            if (!body.title) {
+              return Response.json({ error: 'Title required' }, { status: 400 });
+            }
+            
+            const dummyVector = new Array(768).fill(0.001);
+            const results = await env.VECTORIZE_INDEX.query(dummyVector, {
+              topK: 100,
+              returnMetadata: 'all'
+            });
+            
+            const chunksToDelete = results.matches
+              .filter((match: any) => match.metadata?.title === body.title)
+              .map((match: any) => match.id);
+            
+            if (chunksToDelete.length > 0) {
+              await env.VECTORIZE_INDEX.deleteByIds(chunksToDelete);
+            }
+            
+            return Response.json({
+              success: true,
+              deletedChunks: chunksToDelete.length,
+              title: body.title
+            });
+            
+          } catch (error: any) {
+            return Response.json({ error: error.message }, { status: 500 });
+          }
           case '/rag/search':
             try {
               const body = await request.json() as { query: string; threshold?: number };
