@@ -41,7 +41,10 @@ export default {
 
       const availableDOName = await findAvailableDO(env);
       const url = new URL(request.url);
+      console.log("Original url: ", url)
       const sessionId = url.searchParams.get('session_id') || generateSessionId();
+      console.log("session_id: ",sessionId)
+
       
       if(!availableDOName){
         return new Response('All connection busy, try again later',{status:503,
