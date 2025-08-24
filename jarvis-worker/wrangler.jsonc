@@ -38,7 +38,7 @@
   },  "migrations": [
     {
       "tag": "v1",
-      "new_classes": ["JarvisSessionDO"]
+      "new_sqlite_classes": ["JarvisSessionDO"]
     }
   ]
 
