@@ -40,7 +40,7 @@ export class JarvisSessionDO extends DurableObject<Env>{
             if(!claimResult.success){
                 return new Response('DO busy', {status:503})
             }
-
+            await this.ensureSessionExists(sessionId);
             const pair = new WebSocketPair();
             const [client,server] = Object.values(pair);
 
@@ -95,6 +95,37 @@ export class JarvisSessionDO extends DurableObject<Env>{
     getCurrentSession(): string |null{
         return this.currentSessionId;
     }
+
+    private async ensureSessionExists(sessionId: string): Promise<void> {
+    try {
+        
+        const existingSession = await this.env.DB.prepare(`
+            SELECT session_id FROM chat_sessions WHERE session_id = ?
+        `).bind(sessionId).first();
+        
+        if (!existingSession) {
+            
+            await this.env.DB.prepare(`
+                INSERT INTO chat_sessions (session_id, last_activity, message_count)
+                VALUES (?, CURRENT_TIMESTAMP, 0)
+            `).bind(sessionId).run();
+            
+            console.log('✨ New session created in database:', sessionId);
+        } else {
+            
+            await this.env.DB.prepare(`
+                UPDATE chat_sessions 
+                SET last_activity = CURRENT_TIMESTAMP 
+                WHERE session_id = ?
+            `).bind(sessionId).run();
+            
+            console.log('🔄 Existing session updated:', sessionId);
+        }
+    } catch (error) {
+        console.error('❌ Error managing session in database:', error);
+        
+    }
+}
 
     webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): void {
 

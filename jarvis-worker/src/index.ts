@@ -12,7 +12,7 @@ import { generateSessionId } from './utils/session.js';
 
 
 async function findAvailableDO(env:Env): Promise<string|null>{
-  const POOL_SIZE = 5;
+  const POOL_SIZE = 10;
 
   for (let i = 0; i <POOL_SIZE; i++){
     const doName = `jarvis-name-${i}`;
@@ -37,15 +37,14 @@ async function findAvailableDO(env:Env): Promise<string|null>{
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+
     if(request.headers.get("Upgrade")==="websocket"){
 
       const availableDOName = await findAvailableDO(env);
-      const url = new URL(request.url);
-      console.log("Original url: ", url)
-      const sessionId = url.searchParams.get('session_id') || generateSessionId();
-      console.log("session_id: ",sessionId)
 
-      
+      const url = new URL(request.url);
+      const sessionId = url.searchParams.get('session_id') || generateSessionId();
+    
       if(!availableDOName){
         return new Response('All connection busy, try again later',{status:503,
         headers: { 
@@ -121,19 +120,10 @@ export default {
       // Route requests to appropriate handlers
       if (request.method === "POST") {
         switch (pathname) { 
-          case '/chat':
-            try {
-                          const chatResponse = await handleChat(request, env, ctx);
-            Object.entries(baseHeaders).forEach(([key, value]) => {
-              chatResponse.headers.set(key, value);
-            });
-            return chatResponse;
-            } catch (error) {
-               return Response.json({ error: "Failed to send Message" }, { status: 500 });
-            }
+
          case '/upload-document':
           try {
-                        const uploadResponse = await handleUploadDocument(request, env);
+            const uploadResponse = await handleUploadDocument(request, env);
             Object.entries(baseHeaders).forEach(([key, value]) => {
               uploadResponse.headers.set(key, value);
             });
@@ -206,67 +196,7 @@ export default {
             } catch (error:any) {
               return Response.json({ error: error.message }, { status: 500 });
             }
-            case '/test-do':
-              try {
-                // Crea/ottieni un DO instance
-                const doId = env.JARVIS_SESSION_DO.newUniqueId();
-                const doStub = env.JARVIS_SESSION_DO.get(doId);
-                
-                // Chiama il DO
-                const doResponse = await doStub.fetch(new Request('https://fake.com/test'));
-                const doText = await doResponse.text();
-                
-                const testResponse = Response.json({ 
-                  message: "DO is working!", 
-                  doResponse: doText 
-                });
-                
-                Object.entries(baseHeaders).forEach(([key, value]) => {
-                  testResponse.headers.set(key, value);
-                });
-                return testResponse;
-              } catch (error: any) {
-                return Response.json({ error: error.message }, { status: 500 });
-              }
-            case '/test-do-status':
-                try {
-                  // Ottieni un DO specifico
-                  const doId = env.JARVIS_SESSION_DO.idFromName('test-do-1');
-                  const doStub = env.JARVIS_SESSION_DO.get(doId);
-                  
-                  // Chiama l'endpoint /status del DO
-                  const doResponse = await doStub.fetch(new Request('https://fake.com/status'));
-                  const doData = await doResponse.json();
-                  
-                  const testResponse = Response.json({ 
-                    message: "DO status test",
-                    doStatus: doData
-                  });
-                  
-                  Object.entries(baseHeaders).forEach(([key, value]) => {
-                    testResponse.headers.set(key, value);
-                  });
-                  return testResponse;
-                } catch (error: any) {
-                  return Response.json({ error: error.message }, { status: 500 });
-                }
-            case '/test-pool':
-              try {
-                const availableDO = await findAvailableDO(env);
-                
-                const testResponse = Response.json({
-                  message: "Pool manager test",
-                  availableDO: availableDO,
-                  poolSize: 5
-                });
-                
-                Object.entries(baseHeaders).forEach(([key, value]) => {
-                  testResponse.headers.set(key, value);
-                });
-                return testResponse;
-              } catch (error: any) {
-                return Response.json({ error: error.message }, { status: 500 });
-              }
+
           default:
             return Response.json({ error: "Endpoint not found" }, { status: 404 });
                   }
