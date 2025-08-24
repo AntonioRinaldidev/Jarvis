@@ -3,19 +3,17 @@ import { getCurrentSummary, handleSummarization } from '../handlers/summarizatio
 import { getRecentHistory, saveConversation } from '../database/index.js';
 import { buildChatMessages, buildChatMessagesWithRAG } from '../ai/prompt.js';
 import { RAGRetriever } from '../ai/rag-retriever.js';
+import { DurableObject} from "cloudflare:workers";
+import type { Env } from '../types/env.js';
 
-
-export class JarvisSessionDO{
-    private state: DurableObjectState;
-    private env: any;
+export class JarvisSessionDO extends DurableObject<Env>{
     private sessionId: string | null = null;
     private isOccupied : boolean = false;
     private currentSessionId: string | null = null;
     private websocket : WebSocket | null = null;
 
-    constructor(state: DurableObjectState,env:any){
-        this.state= state;
-        this.env = env;
+    constructor(ctx: DurableObjectState,env:Env){
+         super(ctx, env);
     }
 
     async fetch(request:Request): Promise<Response>{
@@ -45,7 +43,7 @@ export class JarvisSessionDO{
             const pair = new WebSocketPair();
             const [client,server] = Object.values(pair);
 
-            this.state.acceptWebSocket(server);
+            this.ctx.acceptWebSocket(server);
             this.websocket = server;
 
 
@@ -167,7 +165,7 @@ private async handleChatMessage(ws: WebSocket, userMessage: string): Promise<voi
         );
 
 
-        this.state.waitUntil(
+        this.ctx.waitUntil(
             handleSummarization(this.env, this.currentSessionId!, currentMessageCount)
                 .catch(error => console.error('Background summarization failed:', error))
         );
