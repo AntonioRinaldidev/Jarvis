@@ -141,7 +141,7 @@ export default {
             
             const dummyVector = new Array(768).fill(0.001);
             const results = await env.VECTORIZE_INDEX.query(dummyVector, {
-              topK: 100,
+              topK: 50,
               returnMetadata: 'all'
             });
             
