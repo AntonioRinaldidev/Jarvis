@@ -98,7 +98,8 @@ export const RATE_LIMITS = {
   '/upload-document': { maxRequests: 1, windowMs: 60000 }, // 1 upload/minuto
   '/test-vectorize': { maxRequests: 1, windowMs: 60000 },  // 1 test/minuto
   '/status': { maxRequests: 10, windowMs: 60000 },     // 10 status/minuto
-  'default': { maxRequests: 3, windowMs: 60000 }       // 3 richieste/minuto default
+  '/websocket': { maxRequests: 5, windowMs: 60000 },
+  'default': { maxRequests: 3, windowMs: 60000 },       // 3 richieste/minuto default
 };
 
 export function getRateLimitForEndpoint(pathname: string) {

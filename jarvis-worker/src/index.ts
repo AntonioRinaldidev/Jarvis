@@ -37,7 +37,47 @@ async function findAvailableDO(env:Env): Promise<string|null>{
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+          const url = new URL(request.url); //
+            let pathname = url.pathname;
+      
+      if (pathname.startsWith('/api/jarvis')) {
+        pathname = pathname.replace('/api/jarvis', '');
+      }
+      // Se pathname è vuoto, imposta come '/'
+      if (!pathname || pathname === '') {
+        pathname = '/';
+      }
+      const {rateLimitResult,rateLimitConfig,clientIP} = RateLimiter(request,pathname);
 
+      if(!rateLimitResult.allowed){
+        const retryAfterSeconds = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
+        
+        
+        
+        return Response.json({
+          error: 'Rate limit exceeded',
+          message: `Too many requests to ${pathname}. Try again in ${retryAfterSeconds} seconds.`,
+          endpoint: pathname,
+          retryAfter: retryAfterSeconds,
+          limit: rateLimitConfig.maxRequests
+        }, { 
+          status: 429,
+          headers: {
+            'Retry-After': retryAfterSeconds.toString(),
+            'X-RateLimit-Limit': rateLimitConfig.maxRequests.toString(),
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+
+      const baseHeaders = {
+        'X-RateLimit-Limit': rateLimitConfig.maxRequests.toString(),
+        'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+        'X-RateLimit-Reset': rateLimitResult.resetTime.toString()
+      };
     if(request.headers.get("Upgrade")==="websocket"){
 
       const availableDOName = await findAvailableDO(env);
@@ -75,48 +115,8 @@ export default {
     }
 
     try {
-      const url = new URL(request.url); //
-            let pathname = url.pathname;
-      
-      if (pathname.startsWith('/api/jarvis')) {
-        pathname = pathname.replace('/api/jarvis', '');
-      }
-      // Se pathname è vuoto, imposta come '/'
-      if (!pathname || pathname === '') {
-        pathname = '/';
-      }
 
-      const {rateLimitResult,rateLimitConfig,clientIP} = RateLimiter(request,pathname);
 
-      if(!rateLimitResult.allowed){
-        const retryAfterSeconds = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
-        
-        
-        
-        return Response.json({
-          error: 'Rate limit exceeded',
-          message: `Too many requests to ${pathname}. Try again in ${retryAfterSeconds} seconds.`,
-          endpoint: pathname,
-          retryAfter: retryAfterSeconds,
-          limit: rateLimitConfig.maxRequests
-        }, { 
-          status: 429,
-          headers: {
-            'Retry-After': retryAfterSeconds.toString(),
-            'X-RateLimit-Limit': rateLimitConfig.maxRequests.toString(),
-            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json'
-          }
-        });
-      }
-
-      const baseHeaders = {
-        'X-RateLimit-Limit': rateLimitConfig.maxRequests.toString(),
-        'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-        'X-RateLimit-Reset': rateLimitResult.resetTime.toString()
-      };
       // Route requests to appropriate handlers
       if (request.method === "POST") {
         switch (pathname) { 
